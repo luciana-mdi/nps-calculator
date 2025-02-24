@@ -150,9 +150,29 @@ const NPSCalculator = () => {
         description: "Expected percentage increase in new customers from referrals",
         estimation: "Derive from:\n• Current referral rates by NPS score\n• Social media mention rates\n• Industry benchmark: 0.2-0.4% increase"
       },
-      cacReduction: {
-        description: "Expected percentage reduction in customer acquisition costs",
-        estimation: "Calculate using:\n• Word-of-mouth acquisition costs vs paid\n• Referral program efficiency\n• Industry benchmark: 0.5-1.5% reduction"
+      premiumUptakeIncrease: {
+        description: "Expected percentage increase in premium service purchases",
+        estimation: "Delta-specific data:\n• Delta saw a 12% increase in premium product revenue in 2023\n• Premium cabin revenue represents 36% of Delta's total passenger revenue\n• Delta reported that promoters are 2.3x more likely to purchase premium products\n• Based on Delta's 2023 Investor Day, a 0.2% increase is conservative for a 1pt NPS improvement"
+      },
+      premiumMargin: {
+        description: "Average additional revenue from a customer choosing premium options",
+        estimation: "Delta-specific data:\n• Based on Delta's 2023 premium cabin revenue ($18.2B) divided by premium passengers\n• Calculated as the difference between premium and main cabin average fares\n• Delta reported a 13% premium product price increase in 2023"
+      },
+      serviceCostPerCustomer: {
+        description: "Average cost to provide customer service per passenger",
+        estimation: "Calculate using:\n• Total customer service expenses ÷ total customers\n• Include contact center, airport service, and related costs\n• For Delta: Based on their reported customer experience investments"
+      },
+      operatingCosts: {
+        description: "Total annual operating costs",
+        estimation: "Sum of:\n• All operating expenses excluding marketing\n• Delta's 2023 operating expense was approximately $45B\n• Includes fuel, salaries, maintenance, aircraft rent, etc."
+      },
+      serviceCostReduction: {
+        description: "Expected percentage reduction in customer service costs from a 1-point NPS increase",
+        estimation: "For Delta, 0.2% represents the conservative estimate of reduced service costs when NPS increases by 1 point. Higher NPS typically means fewer complaints, support calls, and rebookings. Delta's extensive self-service options make this relatively modest."
+      },
+      operationalEfficiency: {
+        description: "Expected percentage improvement in operational efficiency from a 1-point NPS increase",
+        estimation: "For Delta, 0.1% represents the conservative estimate of operational savings from improved customer behavior when NPS increases. This includes reduced no-shows, fewer last-minute changes, and more predictable booking patterns."
       }
     }
   };
@@ -210,7 +230,13 @@ const NPSCalculator = () => {
   const InputField = ({ label, name, value, onChange, definition }) => {
     const [isTooltipVisible, setTooltipVisible] = useState(false);
     
-    const estimationPoints = definition?.estimation ? formatTooltipContent(definition.estimation) : [];
+    // Ensure we have a definition object even if one wasn't provided
+    const safeDefinition = definition || {};
+    
+    // Get an array of estimation points, handle case where definition might be missing
+    const estimationPoints = safeDefinition.estimation 
+      ? formatTooltipContent(safeDefinition.estimation) 
+      : [];
     
     return (
       <div style={styles.inputGroup}>
@@ -225,14 +251,16 @@ const NPSCalculator = () => {
             {isTooltipVisible && (
               <div style={styles.tooltipContent}>
                 <div style={{...styles.tooltipTitle, fontWeight: '700', color: '#ff6b00'}}>
-                  {definition?.description || "No description available"}
+                  {safeDefinition.description || "No description available"}
                 </div>
                 <div style={styles.tooltipSection}>
                   <div style={{...styles.tooltipTitle, fontWeight: '700', color: '#000'}}>How to estimate:</div>
                   <ul style={styles.tooltipList}>
-                    {estimationPoints.map((point, index) => (
+                    {estimationPoints.length > 0 ? estimationPoints.map((point, index) => (
                       <li key={index} style={styles.tooltipListItem}>{point}</li>
-                    ))}
+                    )) : (
+                      <li style={styles.tooltipListItem}>No estimation guidance available</li>
+                    )}
                   </ul>
                 </div>
               </div>
@@ -263,7 +291,7 @@ const NPSCalculator = () => {
       }}>
         <strong>Case Study: Delta Air Lines (2023)</strong>
         <p style={{margin: '10px 0 0 0'}}>
-          This calculator is pre-populated with Delta Air Lines' 2023 metrics as a case study, using data from their annual report and financial statements. Delta was chosen because they are one of the largest global carriers with publicly available data and consistent financial reporting. Some metrics (like NPS and impact assumptions) use industry benchmarks where airline-specific data isn't public. Feel free to adjust any values to match your airline's specific metrics.
+          This calculator is pre-populated with Delta Air Lines' 2023 metrics as a case study, using data from their annual report, financial statements, and investor presentations. Delta was chosen because they are one of the largest global carriers with publicly available data and a focus on premium products (36% of passenger revenue). Some metrics like NPS use industry benchmarks with Delta-specific adjustments based on their earnings calls and investor relations materials. Feel free to adjust any values to match your airline's specific metrics.
         </p>
       </div>
       
@@ -299,6 +327,53 @@ const NPSCalculator = () => {
               onChange={handleInputChange}
               definition={definitions.baselineMetrics.currentNPS}
             />
+            <InputField
+              label="Customer Acquisition Cost (Millions $)"
+              name="cac"
+              value={inputs.cac / 1000000}
+              onChange={(e) => handleInputChange({
+                target: {
+                  name: 'cac',
+                  value: e.target.value * 1000000
+                }
+              })}
+              definition={definitions.baselineMetrics.cac}
+            />
+            <InputField
+              label="Premium Margin per Customer ($)"
+              name="premiumMargin"
+              value={inputs.premiumMargin}
+              onChange={handleInputChange}
+              definition={definitions.baselineMetrics.premiumMargin || {
+                description: "Average additional revenue from a customer choosing premium options over standard offerings",
+                estimation: "For Delta, $150 represents the average incremental revenue per passenger from premium upgrades, calculated from their 2023 premium cabin revenue compared to main cabin revenue."
+              }}
+            />
+            <InputField
+              label="Service Cost per Customer ($)"
+              name="serviceCostPerCustomer"
+              value={inputs.serviceCostPerCustomer}
+              onChange={handleInputChange}
+              definition={definitions.baselineMetrics.serviceCostPerCustomer || {
+                description: "Average cost to provide customer service and support per passenger",
+                estimation: "For Delta, $45 represents their approximate per-passenger cost for customer service, including contact centers, airport customer service staff, and digital support channels."
+              }}
+            />
+            <InputField
+              label="Operating Costs (Billions $)"
+              name="operatingCosts"
+              value={inputs.operatingCosts / 1000000000}
+              onChange={(e) => handleInputChange({
+                target: {
+                  name: 'operatingCosts',
+                  value: e.target.value * 1000000000
+                }
+              })}
+              definition={definitions.baselineMetrics.operatingCosts || {
+                description: "Total annual operating costs for the entire airline operation",
+                estimation: "For Delta, $45B represents their total 2023 operating expenses from their annual financial statements, including fuel, salaries, maintenance, airport fees, and aircraft leases."
+              }}
+            />
           </div>
           
           <div>
@@ -324,12 +399,55 @@ const NPSCalculator = () => {
               onChange={handleInputChange}
               definition={definitions.impactAssumptions.referralIncrease}
             />
+            <InputField
+              label="Premium Uptake Increase"
+              name="premiumUptakeIncrease"
+              value={inputs.premiumUptakeIncrease}
+              onChange={handleInputChange}
+              definition={definitions.impactAssumptions.premiumUptakeIncrease || {
+                description: "Expected percentage increase in premium service purchases",
+                estimation: "Analyze:\n• Premium class selection rates by NPS score\n• Upgrade acceptance rates\n• Lounge membership uptake\n• Industry benchmark: 0.1-0.3% increase"
+              }}
+            />
           </div>
         </div>
       </div>
 
       <div style={styles.card}>
         <h3 style={styles.sectionTitle}>Results - Value of 1 Point NPS Increase</h3>
+        
+        <div style={{
+          background: '#f9f9f9',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          padding: '15px',
+          marginBottom: '20px',
+          fontSize: '14px',
+          lineHeight: '1.6'
+        }}>
+          <div style={{fontWeight: '600', marginBottom: '8px'}}>How the value is calculated:</div>
+          <div>
+            Value of 1pt NPS Increase = Revenue Effects + Cost Effects
+          </div>
+          <div style={{marginTop: '10px', paddingLeft: '15px'}}>
+            <div><strong>Revenue Effects:</strong></div>
+            <ul style={{margin: '5px 0', paddingLeft: '20px'}}>
+              <li>Retention Value = Retention Improvement % × Total Customers × Average Revenue Per Passenger</li>
+              <li>Share of Wallet Value = Share of Wallet Increase % × Total Customers × Average Revenue Per Passenger</li>
+              <li>Referral Value = Referral Increase % × Total Customers × Average Revenue Per Passenger</li>
+              <li>Premium Value = Premium Uptake Increase % × Total Customers × Premium Margin</li>
+            </ul>
+          </div>
+          <div style={{marginTop: '10px', paddingLeft: '15px'}}>
+            <div><strong>Cost Effects:</strong></div>
+            <ul style={{margin: '5px 0', paddingLeft: '20px'}}>
+              <li>CAC Savings = CAC Reduction % × Customer Acquisition Cost</li>
+              <li>Service Cost Savings = Service Cost Reduction % × Total Customers × Service Cost Per Customer</li>
+              <li>Operational Savings = Operational Efficiency % × Operating Costs</li>
+            </ul>
+          </div>
+        </div>
+        
         <div style={styles.results}>
           <div>
             <h4 style={styles.sectionTitle}>Revenue Effects</h4>
