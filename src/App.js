@@ -201,8 +201,16 @@ const NPSCalculator = () => {
     }).format(value);
   };
 
+  const formatTooltipContent = (text) => {
+    if (!text) return '';
+    // Split by bullet points and filter out empty strings
+    return text.split('•').filter(item => item.trim()).map(item => item.trim());
+  };
+
   const InputField = ({ label, name, value, onChange, definition }) => {
     const [isTooltipVisible, setTooltipVisible] = useState(false);
+    
+    const estimationPoints = definition?.estimation ? formatTooltipContent(definition.estimation) : [];
     
     return (
       <div style={styles.inputGroup}>
@@ -216,9 +224,17 @@ const NPSCalculator = () => {
             <Info size={16} color="#666" />
             {isTooltipVisible && (
               <div style={styles.tooltipContent}>
-                <strong>{definition?.description || "No description available"}</strong>
-                <br /><br />
-                {definition?.estimation || "No estimation guidance available"}
+                <div style={{...styles.tooltipTitle, fontWeight: '700', color: '#ff6b00'}}>
+                  {definition?.description || "No description available"}
+                </div>
+                <div style={styles.tooltipSection}>
+                  <div style={{...styles.tooltipTitle, fontWeight: '700', color: '#000'}}>How to estimate:</div>
+                  <ul style={styles.tooltipList}>
+                    {estimationPoints.map((point, index) => (
+                      <li key={index} style={styles.tooltipListItem}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             )}
           </div>
@@ -251,7 +267,7 @@ const NPSCalculator = () => {
         </p>
       </div>
       
-      <div style={styles.card}>>
+      <div style={styles.card}>
         <h2 style={styles.title}>Airline NPS Value Calculator</h2>
         
         <div style={styles.grid}>
