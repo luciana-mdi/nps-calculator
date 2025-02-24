@@ -236,7 +236,22 @@ const NPSCalculator = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
+      <div style={{
+        background: '#e8f4ff',
+        border: '1px solid #1e88e5',
+        borderRadius: '4px',
+        padding: '15px',
+        marginBottom: '20px',
+        fontSize: '14px',
+        lineHeight: '1.5'
+      }}>
+        <strong>Case Study: Delta Air Lines (2023)</strong>
+        <p style={{margin: '10px 0 0 0'}}>
+          This calculator is pre-populated with Delta Air Lines' 2023 metrics as a case study, using data from their annual report and financial statements. Delta was chosen because they are one of the largest global carriers with publicly available data and consistent financial reporting. Some metrics (like NPS and impact assumptions) use industry benchmarks where airline-specific data isn't public. Feel free to adjust any values to match your airline's specific metrics.
+        </p>
+      </div>
+      
+      <div style={styles.card}>>
         <h2 style={styles.title}>Airline NPS Value Calculator</h2>
         
         <div style={styles.grid}>
